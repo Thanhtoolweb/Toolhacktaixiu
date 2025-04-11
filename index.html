@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tool Dự Đoán Tài Xỉu</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: white;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-bottom: 30px;
+    }
+
+    input {
+      width: 90%;
+      max-width: 300px;
+      padding: 12px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 5px rgba(255,255,255,0.3);
+    }
+
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      margin: 10px 5px;
+      cursor: pointer;
+      background: #00c6ff;
+      background: linear-gradient(to right, #0072ff, #00c6ff);
+      color: white;
+      transition: 0.3s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    button:hover {
+      opacity: 0.9;
+      transform: scale(1.05);
+    }
+
+    .result {
+      margin-top: 30px;
+      font-size: 20px;
+      font-weight: bold;
+      white-space: pre-line;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="authSection">
+    <h2>Nhập Key để sử dụng Tool</h2>
+    <input type="text" id="keyInput" placeholder="Nhập key truy cập">
+    <button onclick="checkKey()">Xác Nhận</button>
+    <div class="result" id="keyMessage"></div>
+  </div>
+
+  <div id="toolSection" class="hidden">
+    <h2>Tool Dự Đoán Tài Xỉu theo MD5</h2>
+    <input type="text" id="inputValue" placeholder="Nhập chuỗi mã cần đoán">
+    <br>
+    <button onclick="predict()">Dự Đoán</button>
+    <button onclick="resetForm()">Reset</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script>
+    // Danh sách key hợp lệ
+    const validKeys = ["abc123", "vip2025", "nct123"]; // Thay key thật ở đây
+
+    function checkKey() {
+      const key = document.getElementById("keyInput").value.trim();
+      const msg = document.getElementById("keyMessage");
+
+      if (!key) {
+        msg.innerText = "Vui lòng nhập key.";
+        return;
+      }
+
+      if (validKeys.includes(key)) {
+        document.getElementById("authSection").classList.add("hidden");
+        document.getElementById("toolSection").classList.remove("hidden");
+      } else {
+        msg.innerText = "Key không hợp lệ.";
+      }
+    }
+
+    const patterns = [];
+    for (let i = 0; i < 100; i++) {
+      patterns.push(function(md5) {
+        const char = md5[i % 32];
+        const value = parseInt(char, 16);
+        return value % 2 === 0 ? "TÀI" : "XỈU";
+      });
+    }
+
+    function predict() {
+      const input = document.getElementById("inputValue").value.trim();
+      if (!input) {
+        document.getElementById("result").innerText = "Vui lòng nhập chuỗi.";
+        return;
+      }
+
+      const md5 = CryptoJS.MD5(input).toString();
+      let prediction = "";
+
+      for (let i = 0; i < patterns.length; i++) {
+        try {
+          const result = patterns[i](md5);
+          if (result === "TÀI" || result === "XỈU") {
+            prediction = result;
+            break;
+          }
+        } catch (e) { continue; }
+      }
+
+      if (!prediction) {
+        const lastChar = md5.slice(-1);
+        const hexValue = parseInt(lastChar, 16);
+        prediction = (hexValue > 7) ? "TÀI" : "XỈU";
+      }
+
+      document.getElementById("result").innerText = `MD5: ${md5}\n=> Dự đoán: ${prediction}`;
+    }
+
+    function resetForm() {
+      document.getElementById("inputValue").value = "";
+      document.getElementById("result").innerText = "";
+    }
+  </script>
+</body>
+</html>
